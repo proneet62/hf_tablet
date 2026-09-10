@@ -1,0 +1,1042 @@
+/* ============================================
+   Global Styles
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--nb-font-ui);
+    color: var(--nb-ink);
+    overflow: hidden;
+    background: transparent;
+}
+
+/* ============================================
+   Tablet Container
+   ============================================ */
+
+#tablet-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    /* backdrop-filter削除(NUI不可): 暗幕なのでぼかし分は不透明度を上げて代替 */
+    background: rgba(4, 7, 12, 0.62);
+    z-index: 9999;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+#tablet-container.tablet-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* ============================================
+   Tablet Device
+   ============================================ */
+
+.tablet-device {
+    width: 1200px;
+    height: 760px;
+    background: linear-gradient(135deg, var(--nb-bg-1) 0%, var(--nb-bg-2) 100%);
+    border-radius: 20px;
+    box-shadow: var(--nb-shadow-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    animation: slideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    border: 2px solid var(--nb-line-peach);
+}
+
+@keyframes slideIn {
+    from {
+        transform: scale(0.8) translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ============================================
+   Status Bar
+   ============================================ */
+
+.status-bar {
+    height: 50px;
+    background: linear-gradient(180deg, rgba(27, 46, 71, 0.60), rgba(16, 28, 43, 0.30));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    color: var(--nb-ink);
+    font-size: 14px;
+    border-bottom: 1px solid var(--nb-line-peach);
+    z-index: 10;
+}
+
+/* タイトルをバー全体に対して厳密に中央寄せする。
+   3要素の flex(space-between) だと左(ロゴ+銘+時計)と右(アイコン)の幅差ぶん中央がズレるため、
+   左右を同幅(1fr)・中央を auto にした grid 3カラムへ切替える。
+   共通ロックアップ用 .nb-has-lockup が display:flex を後勝ちで当てるので、
+   同要素に確実に効くよう .status-bar.nb-has-lockup の高詠度で上書きする。 */
+.status-bar.nb-has-lockup {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.status-left,
+.status-right {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    min-width: 0;
+}
+
+.status-left { justify-self: start; }
+.status-right { justify-self: end; }
+
+.status-center {
+    justify-self: center;
+    text-align: center;
+    font-family: var(--nb-font-display);
+    font-weight: 600;
+    font-size: 18px;
+    color: var(--nb-ink);
+}
+
+#current-time {
+    font-family: var(--nb-font-mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--nb-ink-dim);
+}
+
+.status-right i {
+    font-size: 16px;
+    color: var(--nb-ink-dim);
+}
+
+/* ============================================
+   Content Area
+   ============================================ */
+
+.content-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: var(--tablet-bg-color, var(--nb-bg-0));
+    background-image: var(--tablet-bg-image, none);
+    background-size: cover;
+    background-position: center;
+    transition: background-color 0.5s ease;
+}
+
+.screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    overflow-y: auto;
+}
+
+.screen.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ============================================
+   App Grid
+   ============================================ */
+
+.app-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 30px;
+    padding: 40px;
+    height: calc(100% - 40px);
+    align-content: start;
+    position: relative;
+}
+
+.app-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    padding: 10px;
+    border-radius: 15px;
+    animation: fadeIn 0.3s ease forwards;
+    opacity: 0;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.app-item:hover {
+    transform: scale(1.1);
+}
+
+.app-item.no-hover:hover {
+    transform: none;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.app-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: var(--nb-cream);
+    background: linear-gradient(135deg, var(--app-color, #3498db) 0%, var(--app-color-dark, #2980b9) 100%);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.app-item:hover .app-icon {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    transform: translateY(-3px);
+}
+
+.app-item.no-hover:hover .app-icon {
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    transform: none;
+}
+
+.app-name {
+    color: var(--nb-ink);
+    font-size: 14px;
+    text-align: center;
+    font-weight: 500;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================
+   Edit Mode (Wiggle Animation)
+   ============================================ */
+
+@keyframes wiggle {
+    0%   { transform: rotate(0deg); }
+    25%  { transform: rotate(-2deg); }
+    50%  { transform: rotate(0deg); }
+    75%  { transform: rotate(2deg); }
+    100% { transform: rotate(0deg); }
+}
+
+.app-item.editing {
+    animation: wiggle 0.4s ease-in-out infinite;
+    cursor: grab;
+}
+
+.app-item.editing:active {
+    cursor: grabbing;
+}
+
+.app-item.editing:hover {
+    transform: none;
+}
+
+.app-item.editing:hover .app-icon {
+    transform: none;
+}
+
+/* Drag ghost */
+.app-item.dragging {
+    opacity: 0.7 !important;
+    transform: scale(1.15) !important;
+    z-index: 1000;
+    animation: none !important;
+    pointer-events: none;
+    transition: none;
+    filter: brightness(1.1);
+}
+
+/* Drop target highlight */
+.app-item.drop-target {
+    animation: none !important;
+}
+
+.app-item.drop-target .app-icon {
+    box-shadow: 0 0 0 4px rgba(255, 154, 66, 0.8), 0 0 20px rgba(255, 154, 66, 0.4);
+    transform: scale(1.1);
+    transition: all 0.2s ease;
+}
+
+/* Folder merge indicator */
+.app-item.folder-merge-target .app-icon {
+    box-shadow: 0 0 0 4px rgba(22, 184, 255, 0.85), 0 0 25px rgba(22, 184, 255, 0.5);
+    transform: scale(1.15);
+    transition: all 0.2s ease;
+}
+
+/* Drop placeholder */
+.drop-placeholder {
+    border: 2px dashed var(--nb-line-strong);
+    border-radius: 15px;
+    background: rgba(22, 184, 255, 0.06);
+    min-height: 110px;
+}
+
+/* Edit mode banner */
+.edit-mode-banner {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    /* backdrop-filter削除(NUI不可): 文字が乗るバーなので可読性優先でほぼ不透明にする */
+    background: linear-gradient(135deg, rgba(22, 184, 255, 0.98) 0%, rgba(9, 100, 157, 0.98) 100%);
+    color: var(--nb-cream);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13px;
+    z-index: 100;
+    animation: slideUp 0.3s ease;
+}
+
+.edit-mode-banner.hidden {
+    display: none;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+}
+
+.edit-mode-banner i {
+    font-size: 16px;
+}
+
+.edit-mode-banner span {
+    flex: 1;
+}
+
+.edit-done-btn {
+    background: rgba(254, 245, 231, 0.20);
+    border: 1px solid rgba(254, 245, 231, 0.40);
+    color: var(--nb-cream);
+    padding: 6px 16px;
+    border-radius: var(--nb-r-sm);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.edit-done-btn:hover {
+    background: rgba(254, 245, 231, 0.35);
+}
+
+/* ============================================
+   Folder Icon (Mini Grid)
+   ============================================ */
+
+.folder-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 2px;
+    padding: 8px;
+    /* backdrop-filter削除(NUI不可): 装飾要素なので透け感は残し不透明度は微増 */
+    background: rgba(255, 154, 66, 0.22);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--nb-line-peach);
+    transition: all 0.2s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.folder-icon .mini-icon {
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--nb-ink);
+}
+
+.app-item:hover .folder-icon {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+    transform: translateY(-3px);
+}
+
+/* ============================================
+   Folder Overlay
+   ============================================ */
+
+.folder-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeInOverlay 0.25s ease;
+}
+
+.folder-overlay.hidden {
+    display: none;
+}
+
+@keyframes fadeInOverlay {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+.folder-overlay-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* backdrop-filter削除(NUI不可): ぼかし分は暗幕を濃くして代替 */
+    background: rgba(5, 9, 15, 0.74);
+}
+
+.folder-popup {
+    position: relative;
+    z-index: 201;
+    width: 340px;
+    /* backdrop-filter削除(NUI不可): 主役面なので不透明(--nb-bg-1)にする */
+    background: var(--nb-bg-1);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: var(--nb-shadow-lg);
+    border: 1px solid var(--nb-line-peach);
+    animation: folderPopIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes folderPopIn {
+    from {
+        transform: scale(0.7);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.folder-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.folder-name-input {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--nb-line-strong);
+    color: var(--nb-ink);
+    font-family: var(--nb-font-display);
+    font-size: 20px;
+    font-weight: 600;
+    padding: 4px 0;
+    outline: none;
+    width: 250px;
+    transition: border-color 0.2s ease;
+}
+
+.folder-name-input:focus {
+    border-bottom-color: var(--nb-sage);
+}
+
+.folder-close-btn {
+    background: transparent;
+    border: 1px solid var(--nb-line);
+    color: var(--nb-ink-dim);
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.folder-close-btn:hover {
+    background: rgba(22, 184, 255, 0.16);
+    border-color: var(--nb-sage);
+    color: var(--nb-sage-bright);
+}
+
+.folder-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    padding: 8px;
+}
+
+.folder-grid .app-item {
+    padding: 6px;
+    gap: 6px;
+}
+
+.folder-grid .app-icon {
+    width: 60px;
+    height: 60px;
+    font-size: 26px;
+    border-radius: 16px;
+}
+
+.folder-grid .app-name {
+    font-size: 11px;
+}
+
+/* ============================================
+   Settings Screen
+   ============================================ */
+
+.settings-container {
+    padding: 30px 40px;
+    color: var(--nb-ink);
+}
+
+.settings-container h2 {
+    font-family: var(--nb-font-display);
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: var(--nb-ink);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-container h2 i {
+    color: var(--nb-sage);
+}
+
+.settings-section {
+    margin-bottom: 24px;
+    padding: 20px;
+    background: var(--nb-glass);
+    border-radius: var(--nb-r-lg);
+    border: 1px solid var(--nb-line-peach);
+}
+
+.settings-section h3 {
+    font-family: var(--nb-font-display);
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: var(--nb-ink);
+    border-bottom: 1px solid var(--nb-line-strong);
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.settings-section h3 i {
+    font-size: 14px;
+    color: var(--nb-sage);
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--nb-line);
+}
+
+.setting-item:last-child {
+    border-bottom: none;
+}
+
+.setting-item.column {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.setting-item label {
+    font-size: 14px;
+    color: var(--nb-ink-dim);
+}
+
+.setting-item input[type="range"] {
+    width: 200px;
+    accent-color: var(--nb-sage);
+}
+
+.sub-settings {
+    padding-top: 5px;
+}
+
+.sub-settings.hidden {
+    display: none;
+}
+
+/* Background type toggle */
+.bg-type-toggle {
+    display: flex;
+    gap: 4px;
+    background: rgba(11, 18, 28, 0.45);
+    border-radius: var(--nb-r);
+    padding: 3px;
+}
+
+.bg-type-btn {
+    padding: 6px 14px;
+    border: none;
+    background: transparent;
+    color: var(--nb-ink-dim);
+    cursor: pointer;
+    border-radius: var(--nb-r-sm);
+    font-size: 12px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.bg-type-btn.active {
+    background: rgba(22, 184, 255, 0.30);
+    color: var(--nb-cream);
+}
+
+.bg-type-btn:hover:not(.active) {
+    color: var(--nb-ink);
+}
+
+/* Color picker */
+.color-picker-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.color-picker-input {
+    width: 40px;
+    height: 40px;
+    border: 1px solid var(--nb-line-strong);
+    border-radius: var(--nb-r);
+    cursor: pointer;
+    background: none;
+    padding: 2px;
+}
+
+.color-picker-input::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.color-picker-input::-webkit-color-swatch {
+    border: none;
+    border-radius: 8px;
+}
+
+.color-hex-label {
+    font-family: var(--nb-font-mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 14px;
+    color: var(--nb-ink-dim);
+}
+
+/* Preset colors */
+.preset-colors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 0;
+}
+
+.preset-color-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--nb-r);
+    border: 1px solid var(--nb-line-strong);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.preset-color-btn:hover {
+    transform: scale(1.1);
+    border-color: var(--nb-peach);
+}
+
+.preset-color-btn.selected {
+    border-color: var(--nb-sage);
+    box-shadow: 0 0 0 2px rgba(22, 184, 255, 0.5);
+}
+
+/* Image URL input */
+.image-url-wrapper {
+    display: flex;
+    gap: 8px;
+    width: 100%;
+}
+
+.text-input {
+    flex: 1;
+    background: rgba(11, 18, 28, 0.55);
+    border: 1px solid var(--nb-line-strong);
+    color: var(--nb-ink);
+    padding: 10px 14px;
+    border-radius: var(--nb-r);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.text-input:focus {
+    border-color: var(--nb-sage);
+    box-shadow: 0 0 0 3px rgba(22, 184, 255, 0.18);
+}
+
+.text-input::placeholder {
+    color: var(--nb-ink-faint);
+}
+
+.btn-small {
+    background: linear-gradient(180deg, rgba(22, 184, 255, 0.34), rgba(9, 100, 157, 0.34));
+    border: 1px solid var(--nb-sage);
+    color: var(--nb-cream);
+    padding: 10px 16px;
+    border-radius: var(--nb-r);
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-small:hover {
+    box-shadow: var(--nb-glow-sage);
+}
+
+/* Image preview */
+.image-preview-container {
+    padding: 10px 0;
+}
+
+.image-preview {
+    width: 100%;
+    height: 120px;
+    border-radius: var(--nb-r);
+    background: rgba(11, 18, 28, 0.4);
+    border: 1px dashed var(--nb-line-strong);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--nb-ink-faint);
+    font-size: 13px;
+    overflow: hidden;
+    background-size: cover;
+    background-position: center;
+}
+
+.image-preview i {
+    font-size: 28px;
+}
+
+.image-preview.has-image {
+    border-style: solid;
+    border-color: var(--nb-line-strong);
+}
+
+.image-preview.has-image i,
+.image-preview.has-image span {
+    display: none;
+}
+
+/* Danger button */
+.btn-danger {
+    background: rgba(200, 112, 90, 0.16);
+    color: #ff9a42;
+    border: 1px solid var(--nb-danger);
+    padding: 8px 18px;
+    border-radius: var(--nb-r);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-danger:hover {
+    background: rgba(200, 112, 90, 0.26);
+    box-shadow: 0 0 16px rgba(200, 112, 90, 0.45);
+    transform: translateY(-1px);
+}
+
+/* ============================================
+   Navigation Bar
+   ============================================ */
+
+.navigation-bar {
+    height: 60px;
+    background: linear-gradient(180deg, var(--nb-bg-1) 0%, var(--nb-bg-0) 100%);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-top: 1px solid var(--nb-line-peach);
+}
+
+.nav-btn {
+    background: none;
+    border: none;
+    color: var(--nb-ink-dim);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 10px 20px;
+    transition: all 0.2s ease;
+    border-radius: var(--nb-r);
+}
+
+.nav-btn:hover {
+    color: var(--nb-ink);
+    background: rgba(22, 184, 255, 0.10);
+}
+
+.nav-btn.nav-home {
+    font-size: 14px;
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+
+.btn-primary {
+    background: linear-gradient(180deg, rgba(22, 184, 255, 0.34), rgba(9, 100, 157, 0.34));
+    color: var(--nb-cream);
+    border: 1px solid var(--nb-sage);
+    padding: 12px 30px;
+    border-radius: var(--nb-r);
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: none;
+    margin-top: 20px;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(180deg, rgba(22, 184, 255, 0.45), rgba(9, 100, 157, 0.40));
+    box-shadow: var(--nb-glow-sage);
+    transform: translateY(-2px);
+}
+
+.btn-primary i {
+    margin-right: 8px;
+}
+
+/* ============================================
+   Scrollbar
+   ============================================ */
+
+.screen::-webkit-scrollbar {
+    width: 6px;
+}
+
+.screen::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 10px;
+}
+
+.screen::-webkit-scrollbar-thumb {
+    background: rgba(22, 184, 255, 0.45);
+    border-radius: 10px;
+}
+
+.screen::-webkit-scrollbar-thumb:hover {
+    background: rgba(22, 184, 255, 0.70);
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+
+@media (max-width: 900px) {
+    .tablet-device {
+        width: 90vw;
+        height: 70vh;
+    }
+
+    .app-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        padding: 30px;
+    }
+
+    .app-icon {
+        width: 60px;
+        height: 60px;
+        font-size: 28px;
+    }
+
+    .app-name {
+        font-size: 12px;
+    }
+}
+
+/* ============================================
+   Animations
+   ============================================ */
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+.app-item.pulse {
+    animation: pulse 0.5s ease;
+}
+
+/* ============================================
+   Loading State
+   ============================================ */
+
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(22, 184, 255, 0.18);
+    border-top: 5px solid var(--nb-sage);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ============================================
+   Utility
+   ============================================ */
+
+.hidden {
+    display: none !important;
+}
+
+/* ===== Hexa Forge 部品共通化レイヤー ===== */
+/* 自前クラスを COMPONENT-SPEC 準拠の nb 仕様へ後勝ち上書き。
+   markup無改変・骨格温存。セレクタはタブレットの実クラスにマップ。 */
+
+/* --- ボタン: mono・大文字・統一トランジション(主CTA/小/危険) --- */
+.btn-primary,
+.btn-small {
+    font-family: var(--nb-font-mono);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-weight: 500;
+    transition: transform var(--nb-fast), box-shadow var(--nb-med), background var(--nb-fast), border-color var(--nb-fast);
+}
+.btn-primary { letter-spacing: .14em; }
+
+.btn-danger {
+    font-family: var(--nb-font-mono);
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-weight: 500;
+}
+
+/* 編集モード「完了」ボタンはセージバナー上の押下要素。形だけ作法へ寄せる */
+.edit-done-btn {
+    font-family: var(--nb-font-mono);
+    letter-spacing: .10em;
+    text-transform: uppercase;
+}
+
+/* --- 入力: 共通フォント・角丸・余白 --- */
+.text-input {
+    font-family: var(--nb-font-ui);
+    border-radius: var(--nb-r);
+}
+
+/* --- パネル: 設定セクションを nb パネル作法へ --- */
+.settings-section {
+    box-shadow: var(--nb-shadow);
+}
+
+/* --- 数値・ID・カウント系は等幅＋桁揃え --- */
+#current-time,
+.color-hex-label,
+.settings-container .setting-item span {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ===== Hexa Forge L2 ブランド署名(ロックアップ) ===== */
+.nb-has-lockup { display: flex; align-items: center; justify-content: space-between; gap: 13px; }
+.status-bar.nb-has-lockup .status-left { display: flex; align-items: center; gap: 12px; }
+.nb-lockup-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.nb-lockup-text h1, .nb-lockup-text h2, .nb-lockup-text h3 { margin: 0; line-height: 1.15; }
+.nb-lockup-text .nb-eyebrow { line-height: 1; white-space: nowrap; letter-spacing: 0.16em; }
+
+/* ===== Hexa Forge L3 環境の奥行き(アンビエント) ===== */
+/* 背景には一切触れず box-shadow の inset だけで上方からの採光感を与える。
+   主筐体(.tablet-device)と主ポップアップ(.folder-popup)へ。 */
+.tablet-device {
+    box-shadow:
+        var(--nb-shadow-lg),
+        inset 0 1px 0 rgba(255, 154, 66, 0.22),
+        inset 0 72px 90px -56px rgba(232, 184, 109, 0.22),
+        inset 0 -90px 110px -70px rgba(4, 7, 12, 0.45);
+}
+.folder-popup {
+    box-shadow:
+        var(--nb-shadow-lg),
+        inset 0 1px 0 rgba(255, 154, 66, 0.22),
+        inset 0 60px 80px -52px rgba(232, 184, 109, 0.20),
+        inset 0 -70px 90px -64px rgba(4, 7, 12, 0.42);
+}
