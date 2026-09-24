@@ -1,380 +1,175 @@
-# 📱 hf_tablet - 統合タブレットシステム
+# hf_tablet
 
-qb-radialmenuのように、config.luaに登録するだけで他のスクリプトのNUIを開けるタブレットシステム
+FiveM 用の統合タブレット NUI ランチャーです。`config.lua` に登録したアプリや、他リソースから動的登録したアプリをタブレット画面から起動できます。
 
-## 🌟 特徴
+## 現行仕様
 
-- **簡単な統合**: config.luaに数行追加するだけで他のスクリプトと統合
-- **複数のトリガータイプ対応**: イベント、エクスポート、コマンド、NUI
-- **アプリ別権限**: ジョブ・管理者ごとにアプリへのアクセスを設定可能
-- **動的アプリ登録**: 実行時に他のリソースからアプリを追加/削除可能
-- **モダンUI**: アニメーション付きの美しいタブレットUI
-- **in_bridge統合**: Bridgeシステムと完全統合
+- デフォルトは `F9` / `/tablet` で開閉。`Config.OpenKey` で変更可能
+- `hf_tablet:client:open` / `close` / `toggle` イベントに対応
+- `event`、`server_event`、`export`、`command`、`nui`、`system` の 6 種類
+- タブレット全体とアプリ単位のジョブ制限
+- アプリ単位の `admin = true` 制限（`hf_bridge:IsAdmin` を使用）
+- アイテム所持必須設定、タブレット prop / アニメーション
+- 背景色、グリッド、アイコンサイズ、表示順、アニメーション速度を設定可能
+- 画面設定とレイアウトをプレイヤー識別子ごとの Resource KVP に保存
+- アプリを開く直前にも権限を再確認
+- 死亡時・Pause Menu 表示時・リソース停止時にタブレットと NUI focus を解除
 
-## 📦 インストール
+## インストール
 
-### 1. ファイル配置
-
-```
-[your-server]/resources/hf_tablet/
-```
-
-### 2. server.cfg に追加
+必須依存関係は `hf_bridge`、`ox_lib`、`hf_assets` です。依存関係より後に起動してください。
 
 ```cfg
 ensure ox_lib
-ensure in_bridge
+ensure hf_bridge
 ensure hf_assets
 ensure hf_tablet
 ```
 
-### 3. 依存関係
+`fxmanifest.lua` は互換名として `provide 'in_tablet'` も宣言しています。
 
-- `in_bridge` (必須)
-- `ox_lib` (必須)
-- `hf_assets` (必須)
-
-## 🎮 使用方法
-
-### タブレットを開く
-
-- **キー**: `F9` (デフォルト、config.luaで変更可能)
-- **コマンド**: `/tablet`
-- **イベント**: `TriggerEvent('hf_tablet:client:toggle')`
-
-## ⚙️ Config設定
-
-### 基本設定
+## 設定
 
 ```lua
--- タブレットを開くキー
 Config.OpenKey = 'F9'
-
--- アイテムが必要か
 Config.RequireItem = false
 Config.TabletItem = 'tablet'
 
--- ジョブ制限（nilで全員使用可能）
+-- nil または空テーブルなら全員利用可能
 Config.AllowedJobs = nil
--- 例: Config.AllowedJobs = {'police', 'ambulance'}
+-- Config.AllowedJobs = {'police', 'ambulance', 'mechanic'}
 ```
 
-### アプリの登録
+`Config.Animation` でアニメーション辞書・prop・bone・位置・回転、`Config.UI` で `backgroundColor`、`iconSize`、`grid.columns`、`grid.rows`、`animationSpeed` を変更できます。通知文言は `Config.Notifications` で変更します。
 
-#### 1. イベントを呼び出すアプリ
+## アプリ登録
+
+アプリは `Config.Apps` に登録します。`home` と `settings` はシステムアプリで、`system = true` のアプリは削除できません。
+
+### クライアントイベント
 
 ```lua
 {
-    id = 'police_mdt',
-    name = 'Police MDT',
-    icon = 'fas fa-shield-alt',
-    color = '#3498db',
-    type = 'event',
-    trigger = 'police:client:openMDT',
-    jobs = {'police'},
-    order = 1,
+    id = 'police_mdt', name = 'Police MDT',
+    icon = 'fas fa-shield-alt', color = '#3498db',
+    type = 'event', trigger = 'police:client:openMDT',
+    args = {}, jobs = {'police'}, order = 1,
 }
 ```
 
-#### 2. エクスポートを呼び出すアプリ
+### サーバーイベント
 
 ```lua
 {
-    id = 'banking',
-    name = 'Banking',
-    icon = 'fas fa-university',
-    color = '#2ecc71',
-    type = 'export',
-    resource = 'qb-banking',
-    export = 'OpenBank',
-    args = {},
-    order = 2,
+    id = 'invoice', name = 'Invoices',
+    icon = 'fas fa-file-invoice-dollar', color = '#f39c12',
+    type = 'server_event', trigger = 'billing:server:openUI',
+    args = {}, order = 2,
 }
 ```
 
-#### 3. コマンドを実行するアプリ
+### Export / コマンド
 
 ```lua
 {
-    id = 'garage',
-    name = 'Garage',
-    icon = 'fas fa-car',
-    color = '#e74c3c',
-    type = 'command',
-    command = 'garage',
-    order = 3,
+    id = 'banking', name = 'Banking', icon = 'fas fa-university',
+    color = '#2ecc71', type = 'export',
+    resource = 'qb-banking', export = 'OpenBank', args = {}, order = 3,
+}
+
+{
+    id = 'garage', name = 'Garage', icon = 'fas fa-car',
+    color = '#e74c3c', type = 'command', command = 'garage', order = 4,
 }
 ```
 
-#### 4. サーバーイベントを呼び出すアプリ
+`export` の `args` は配列として指定し、順番どおり渡します。対象リソースが停止中、または export 呼び出しでエラーの場合は通知します。
+
+### NUI イベント
 
 ```lua
 {
-    id = 'invoice',
-    name = 'Invoices',
-    icon = 'fas fa-file-invoice-dollar',
-    color = '#f39c12',
-    type = 'server_event',
-    trigger = 'billing:server:openUI',
-    order = 4,
-}
-```
-
-## 🔧 他のリソースとの統合
-
-### 方法1: Export を使う
-
-```lua
--- 他のリソースのclient.luaから
-exports['hf_tablet']:RegisterApp({
-    id = 'my_custom_app',
-    name = 'My App',
-    icon = 'fas fa-star',
-    color = '#ff6b6b',
-    type = 'event',
-    trigger = 'my_resource:client:openUI',
-    order = 20,
-})
-```
-
-### 方法2: Event を使う
-
-```lua
--- 他のリソースのclient.luaから
-TriggerEvent('hf_tablet:client:registerApp', {
-    id = 'another_app',
-    name = 'Another App',
-    icon = 'fas fa-rocket',
-    color = '#4ecdc4',
-    type = 'export',
-    resource = 'my_resource',
-    export = 'OpenMyUI',
-    order = 21,
-})
-```
-
-### アプリを削除
-
-```lua
-exports['hf_tablet']:RemoveApp('my_custom_app')
-```
-
-## 📚 アプリタイプ一覧
-
-| タイプ | 説明 | 必須パラメータ |
-|--------|------|----------------|
-| `event` | クライアントイベントをトリガー | `trigger` |
-| `server_event` | サーバーイベントをトリガー | `trigger` |
-| `export` | 他リソースのエクスポート呼び出し | `resource`, `export` |
-| `command` | チャットコマンドを実行 | `command` |
-| `nui` | カスタムNUIを開く | `nui.event` |
-| `system` | システムアプリ（編集不可） | - |
-
-## 🎨 アイコン
-
-Font Awesome 6を使用しています: https://fontawesome.com/icons
-
-例:
-- `fas fa-home` - ホーム
-- `fas fa-shield-alt` - 警察
-- `fas fa-university` - 銀行
-- `fas fa-car` - 車両
-- `fas fa-mobile-alt` - 電話
-
-## 🔐 権限システム
-
-### ジョブ制限
-
-```lua
-{
-    id = 'police_app',
-    name = 'Police App',
-    icon = 'fas fa-shield',
-    color = '#3498db',
-    type = 'event',
-    trigger = 'police:openApp',
-    jobs = {'police', 'sheriff'},  -- 警察と保安官のみ
-    order = 1,
-}
-```
-
-### 管理者制限
-
-`admin = true` を指定すると、`in_bridge` の `IsAdmin` 判定を通過した管理者だけが利用できます。
-
-```lua
-{
-    id = 'admin_app',
-    name = 'Admin App',
-    icon = 'fas fa-user-shield',
-    color = '#c0392b',
-    type = 'command',
-    command = 'adminmenu',
-    admin = true,
-    order = 2,
-}
-```
-
-`jobs` と `admin = true` を同じアプリに指定した場合は、指定ジョブまたは管理者のどちらかに該当すれば利用できます。どちらも指定しないアプリは従来どおり全員に表示されます。
-
-### アイテム制限
-
-```lua
--- config.lua
-Config.RequireItem = true
-Config.TabletItem = 'tablet'
-```
-
-タブレットアイテムをインベントリに追加:
-```lua
--- アイテムデータベース（qb-core/shared/items.lua など）
-['tablet'] = {
-    ['name'] = 'tablet',
-    ['label'] = 'Tablet',
-    ['weight'] = 2000,
-    ['type'] = 'item',
-    ['image'] = 'tablet.png',
-    ['unique'] = false,
-    ['useable'] = true,
-    ['shouldClose'] = true,
-    ['description'] = 'A modern tablet device'
-},
-```
-
-## 🎯 実装例
-
-### 例1: qb-policejob との統合
-
-```lua
--- hf_tablet/config.lua
-{
-    id = 'police_mdt',
-    name = 'Police MDT',
-    icon = 'fas fa-laptop',
-    color = '#3498db',
-    type = 'event',
-    trigger = 'police:client:openMDT',
-    jobs = {'police'},
-    order = 1,
-}
-```
-
-### 例2: qb-banking との統合
-
-```lua
-{
-    id = 'banking',
-    name = 'Bank',
-    icon = 'fas fa-university',
-    color = '#2ecc71',
-    type = 'export',
-    resource = 'qb-banking',
-    export = 'OpenBank',
-    order = 2,
-}
-```
-
-### 例3: カスタムリソースとの統合
-
-```lua
--- あなたのリソースの fxmanifest.lua
-dependencies {
-    'hf_tablet'
-}
-
--- あなたのリソースの client.lua
-CreateThread(function()
-    Wait(1000)
-    
-    exports['hf_tablet']:RegisterApp({
-        id = 'my_awesome_app',
-        name = 'My Awesome App',
-        icon = 'fas fa-star',
-        color = '#e74c3c',
-        type = 'event',
-        trigger = 'myresource:client:openUI',
-        order = 50,
-    })
-end)
-
--- UIを開くイベント
-RegisterNetEvent('myresource:client:openUI', function()
-    -- あなたのNUIを開く処理
-    SetNuiFocus(true, true)
-    SendNUIMessage({
-        action = 'show'
-    })
-end)
-```
-
-## 🛠️ 管理コマンド
-
-### タブレットを付与
-
-```
-/givetablet [player_id]
-```
-
-## 🎨 UI カスタマイズ
-
-### 色の変更
-
-```lua
-Config.UI = {
-    backgroundColor = '#1a1a1a',  -- 背景色
-    iconSize = 80,                -- アイコンサイズ
-    grid = {
-        columns = 4,              -- 列数
-        rows = 3,                 -- 行数
+    id = 'phone', name = 'Phone', icon = 'fas fa-mobile-alt',
+    color = '#9b59b6', type = 'nui',
+    nui = {
+        resource = 'qb-phone', -- 表示用情報。起動時の状態確認には使用しません。
+        event = 'qb-phone:client:openPhone',
     },
-    animationSpeed = 300,         -- アニメーション速度
+    args = {}, order = 5,
 }
 ```
 
-## 🐛 トラブルシューティング
+`nui.event` はクライアントイベントとして実行されます。
 
-### アプリが表示されない
+## 権限
 
-1. リソースが起動しているか確認
-2. ジョブ制限を確認
-3. F8コンソールでエラーを確認
+```lua
+{
+    id = 'admin_app', name = 'Admin App', icon = 'fas fa-user-shield',
+    color = '#c0392b', type = 'command', command = 'adminmenu',
+    admin = true, order = 10,
+}
+```
 
-### アプリをクリックしても何も起こらない
+- `jobs = {'police'}`: 指定ジョブだけ許可
+- `admin = true`: `hf_bridge:IsAdmin` が true のプレイヤーだけ許可
+- 両方指定: 指定ジョブまたは管理者を許可
+- 両方未指定: 全員を許可
 
-1. イベント/エクスポート名が正しいか確認
-2. 対象リソースが起動しているか確認
-3. F8コンソールでエラーを確認
+管理者判定に失敗した場合は権限を付与しません（fail-closed）。
 
-### タブレットが開かない
+## 動的登録・削除
 
-1. `in_bridge` が起動しているか確認
-2. アイテム設定を確認（RequireItem = true の場合）
-3. キーマッピングを確認
+```lua
+exports['hf_tablet']:RegisterApp({
+    id = 'my_app', name = 'My App', icon = 'fas fa-star',
+    color = '#ff6b6b', type = 'event',
+    trigger = 'my_resource:client:openUI', order = 20,
+})
+exports['hf_tablet']:RemoveApp('my_app')
+```
 
-## 📝 更新履歴
+同じ `id` があれば更新します。イベント版も利用できます。
 
-### v1.1.0 (2026)
-- アプリ別の管理者権限（`admin = true`）を追加
-- ジョブ権限によるアプリ表示フィルタを修正
-- アプリ起動時に最新のジョブ・管理者権限を再確認
+```lua
+TriggerEvent('hf_tablet:client:registerApp', app)
+TriggerEvent('hf_tablet:client:removeApp', 'my_app')
+```
 
-### v1.0.0 (2025)
-- 初回リリース
-- 基本機能実装
-- 5つのアプリタイプ対応
-- 動的アプリ登録
-- ジョブ制限システム
+## Export / イベント一覧
 
-## 🤝 サポート
+| 種別 | 名前 | 内容 |
+| --- | --- | --- |
+| Client export | `OpenTablet()` | 開く |
+| Client export | `CloseTablet()` | 閉じる |
+| Client export | `IsTabletOpen()` | 開いていれば `true` |
+| Client export | `RegisterApp(app)` | 追加・同じ ID を更新 |
+| Client export | `RemoveApp(appId)` | システムアプリ以外を削除 |
+| Client event | `hf_tablet:client:open` | 開く |
+| Client event | `hf_tablet:client:close` | 閉じる |
+| Client event | `hf_tablet:client:toggle` | 開閉切替 |
 
-問題や質問がある場合は、GitHubのIssuesで報告してください。
+## アイテムと `/givetablet`
 
-## 📄 ライセンス
+`Config.RequireItem = true` の場合、インベントリ側に `Config.TabletItem`（デフォルト `tablet`）を登録してください。
 
-MIT License
+`/givetablet [player_id]` はアイテム付与用の補助コマンドです。ただし現行コードでは管理者権限チェックが未実装です。本番利用時は `server/main.lua` のコメント箇所にサーバー側の権限チェックを追加してください。`Config.RequireItem = false` では何も付与しません。
 
-## 🙏 クレジット
+## 保存データ
 
-- in_bridge システム
-- Font Awesome アイコン
-- jQuery ライブラリ
+DB や SQL は使用しません。レイアウトは `hf_tablet:layout:<identifier>`、設定は `hf_tablet:settings:<identifier>` の Resource KVP に保存します。
+
+## トラブルシューティング
+
+- 起動しない: `hf_bridge`、`ox_lib`、`hf_assets` の起動順と F8 コンソールを確認
+- アイテム不足: `Config.RequireItem`、`Config.TabletItem`、インベントリのアイテム名を確認
+- アプリが表示されない: `Config.AllowedJobs`、`jobs`、`admin`、`order` を確認
+- 起動しないアプリがある: イベント / export / コマンド名と対象リソースの起動状態を確認
+
+## ライセンス
+
+MIT License（詳細は [LICENSE](LICENSE) を参照）
+
+## クレジット
+
+Hexa Forge / `hf_bridge` / Font Awesome / jQuery
