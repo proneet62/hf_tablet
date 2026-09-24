@@ -8,3 +8,4 @@ hf_tablet README 更新進捗
 - git 差分チェック完了。README と本進捗ファイルだけをコミット
 - コミット: d3a3b63 docs: update hf_tablet README
 - push は GitHub 認証情報未取得（SEC_E_NO_CREDENTIALS）のため未完了
+- 依存関係の GitHub リンク（hf_bridge / hf_assets / ox_lib）を README に追加

@@ -17,7 +17,13 @@ FiveM 用の統合タブレット NUI ランチャーです。`config.lua` に�
 
 ## インストール
 
-必須依存関係は `hf_bridge`、`ox_lib`、`hf_assets` です。依存関係より後に起動してください。
+必須依存関係は次の 3 つです。
+
+- [`hf_bridge`](https://github.com/proneet62/hf_bridge): フレームワーク、インベントリ、callback、通知などの共通 Bridge
+- [`hf_assets`](https://github.com/proneet62/hf_assets): Hexa Forge 共通 NUI テーマ、ロゴ、Font Awesome、jQuery
+- [`ox_lib`](https://github.com/overextended/ox_lib): FiveM 用共通ライブラリ
+
+各リポジトリを `resources` 配下へ配置し、依存関係より後に起動してください。
 
 ```cfg
 ensure ox_lib
@@ -27,6 +33,8 @@ ensure hf_tablet
 ```
 
 `fxmanifest.lua` は互換名として `provide 'in_tablet'` も宣言しています。
+
+`hf_bridge` と `hf_assets` は同じ Hexa Forge 系リソースの公開リポジトリです。`ox_lib` は公式の Overextended リポジトリを使用してください。
 
 ## 設定
 
